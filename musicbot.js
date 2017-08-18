@@ -27,6 +27,8 @@ var aliases_file_path = "aliases.json";
 var stopped = false;
 var inform_np = true;
 
+var volume = 0.05;
+
 var now_playing_data = {};
 var queue = [];
 var aliases = {};
@@ -337,7 +339,30 @@ var commands = [
 				console.log('Error on setavatar command:', err); 
       });
 		}
-  }
+  },
+
+  {
+	command: "volume",
+		description: "Set volume, 1 - 100",
+		parameters: ["Number between 1 - 100"],
+		execute: function(message, params) {
+
+			var volume_user = params[1];
+			var reg = /^\d*$/;
+
+			if (volume_user < 1 || volume_user > 100 || !reg.test(volume_user)) {
+				message.reply('The volume is incorrect');
+			} else {
+				volume_user = volume_user / 100;
+				if (voice_handler === null) {
+					volume = volume_user;
+				} else {
+					voice_handler.setVolume(volume_user);
+				}
+				message.reply('The volume is ' + params[1]);
+			}
+		}
+	}
 
 ];
 
@@ -411,7 +436,7 @@ function play_next_song() {
 	}
 
 	var audio_stream = ytdl("https://www.youtube.com/watch?v=" + video_id);
-	voice_handler = voice_connection.playStream(audio_stream);
+	voice_handler = voice_connection.playStream(audio_stream, {volume: volume});
 
 	voice_handler.once("end", reason => {
 		voice_handler = null;
